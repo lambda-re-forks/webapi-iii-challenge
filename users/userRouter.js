@@ -37,20 +37,20 @@ router.post("/:id/posts", validatePost, async (req, res) => {
       });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        errorMessage: "Something went wrong adding that post to the database"
-      });
+    res.status(500).json({
+      errorMessage: "Something went wrong adding that post to the database"
+    });
   }
 });
 
 router.get("/", async (req, res) => {
   try {
-    const users = await userDb.find();
+    const users = await userDb.get();
     res.status(200).json(users);
   } catch (error) {
-    res.status(500).json(error);
+    res.status(500).json({
+      errorMessage: "Something went wrong getting the data from the database"
+    });
   }
 });
 
@@ -85,16 +85,51 @@ router.get("/:id/posts", async (req, res) => {
   }
 });
 
-router.delete("/:id", (req, res) => {});
+router.delete("/:id", validateUserId, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const deletedCount = await userDb.remove(id);
+    if (deletedCount) {
+      const users = await userDb.get();
+      res.status(200).json(users);
+    } else {
+      res.status(404).json({ errorMessage: "Sorry that user is not found" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ errorMessage: "Something went wrong when deleting that user" });
+  }
+});
 
-router.put("/:id", (req, res) => {});
+router.put("/:id", validateUserId, validateUser, async (req, res) => {
+  const id = req.params.id;
+  const userInfo = req.user;
+  try {
+    const updatedCount = await userDb.update(id, userInfo);
+    if (updatedCount) {
+      const user = await userDb.getById(id);
+      if (user) {
+        res.status(200).json(user);
+      } else {
+        res.status(404).json({
+          errorMessage: "We couldn't find the info for the user we just updated"
+        });
+      }
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ errorMessage: "Something went wrong updating that user" });
+  }
+});
 
 //custom middleware
 
 async function validateUserId(req, res, next) {
   const id = req.params.id;
   try {
-    const user = await userDb.findById(id);
+    const user = await userDb.getById(id);
     if (user) {
       req.user = user;
       next();
