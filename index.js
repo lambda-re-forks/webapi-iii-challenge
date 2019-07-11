@@ -1,4 +1,7 @@
 // code away!
+const dotenv = require("dotenv");
+dotenv.config();
+
 const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -16,11 +19,5 @@ app.get("/", (req, res) => res.send("<h1>WebApi-III-Challenge: Web20</h1>"));
 app.use("/api/users", userRouter);
 app.use("/api/posts", postRouter);
 
-
 const port = process.env.PORT || 4000;
 app.listen(port, console.log(`Sever running on port ${port}`));
-
-
-
-
-
